@@ -18,7 +18,6 @@ $ source venv/bin/activate
 
 `pip install -r requirements.txt`
 
-
 ## Starting Database
 
 Default creds: `root:root`
@@ -28,4 +27,12 @@ Default table: `arg-watch`
 
 ## Running Program
 
-`./main.py`
+`docker-compose up -d db && ./main.py`
+
+## Useful Scripts
+
+* [scripts/postgres-console.sh](scripts/postgres-console.sh) 
+	- launch a PSQL instance on the arg-watch database for quick querying
+* [scripts/postgres-nuke.sh](scripts/postgres-nuke.sh)
+	- In the event of database getting massively fucked, tear down docker container/images/volumes and DROP/recreate
+* [scripts/start-db.sh](scripts/start-db.sh)
