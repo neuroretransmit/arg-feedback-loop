@@ -6,7 +6,17 @@ from db import add_subreddit
 from reddithelper import reddit
 
 
-# TODO: We are watching subreddits for new posts, need to filter (Added poll data ignoring/flair ignoring)
+class Skip(Exception): pass
+
+
+# TODO: Expand filtering
+def filter_submission(submission):
+    # Skip dumb flair/polls, even the ones we aren't are fucking dumb.
+    if hasattr(submission, 'poll_data') \
+            or submission.link_flair_text in ["Meme", "Creator Question", "Creator Recruitment", "Question"]:
+        raise Skip()
+
+
 # FIXME: Looks like it is only watching r/ARG - all active streams didn't report
 def watch_subreddits(subreddits):
     """
@@ -24,11 +34,9 @@ def watch_subreddits(subreddits):
                     # Skip empty streams
                     if submission is None:
                         continue
-                    # Skip polls
-                    if submission.poll_data is None:
-                        continue
-                    # Skip dumb flair, even the ones we aren't are fucking dumb.
-                    if submission.link_flair_text in ["Meme", "Creator Question", "Creator Recruitment", "Question"]:
+                    try:
+                        filter_submission(submission)
+                    except Skip:
                         continue
                     print(submission.title)
                     print(submission.url)
@@ -36,7 +44,6 @@ def watch_subreddits(subreddits):
         print(e)
 
 
-# TODO: Segment filtering logic for submissions so it is used here as well
 # TODO: Check against DB/populate instead of static set
 def scan_users(users, subreddits):
     """
