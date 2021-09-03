@@ -10,10 +10,10 @@ class Skip(Exception): pass
 
 
 # TODO: Expand filtering
-def filter_submission(submission):
+def filter_submission(submission, ignored_flair=["Meme", "Creator Question", "Creator Recruitment", "Question"]):
     # Skip dumb flair/polls, even the ones we aren't are fucking dumb.
     if hasattr(submission, 'poll_data') \
-            or submission.link_flair_text in ["Meme", "Creator Question", "Creator Recruitment", "Question"]:
+            or submission.link_flair_text in ignored_flair:
         raise Skip()
 
 
