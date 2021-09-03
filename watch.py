@@ -63,6 +63,10 @@ def scan_users(users, subreddits):
                 if comment.subreddit not in subreddits:
                     continue
                 submission = comment.submission
+                try:
+                    filter_submission(submission)
+                except Skip:
+                    continue
                 if submission.permalink not in posts:
                     print("- found", submission.id)
                     posts.add(submission.permalink)
