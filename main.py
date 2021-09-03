@@ -10,5 +10,6 @@ USER_WATCHLIST = ['indires', 'StudentConfident9045']
 
 connect()
 create_tables()
+
 scan_users(USER_WATCHLIST, SUBREDDITS)
 watch_subreddits(SUBREDDITS)

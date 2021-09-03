@@ -1,11 +1,14 @@
 from pprint import pprint
 from reddithelper import reddit
 from prawcore.exceptions import ResponseException
+from db import add_subreddit, add_submission
 
 
-# TODO: We are watching subreddits for new posts, but how should we filter the good from the bad
-# - Added poll data ignoring
+# TODO: We are watching subreddits for new posts, need to filter (Added poll data ignoring/flair ignoring)
+# FIXME: Looks like it is only watching r/ARG - all active streams didn't report
 def watch_subreddits(subreddits):
+    for subreddit in subreddits:
+        add_subreddit(subreddit)
     try:
         print(f"Watching {subreddits} for new posts")
         while True:
