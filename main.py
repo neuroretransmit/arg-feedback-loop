@@ -2,13 +2,14 @@
 
 # FIXME: Slow ass network via client auth
 
-from db import initialize_db
+from db import init_db
 from watch import watch_subreddits, scan_users
 
 SUBREDDITS = ['ARG', 'puzzles', 'codes']
-USER_WATCHLIST = ['indires', 'StudentConfident9045']
+USER_WATCHLIST = ['indires', 'StudentConfident9045', 'PotatoKingTheVII']
 
-initialize_db()
 
-scan_users(USER_WATCHLIST, SUBREDDITS)
-watch_subreddits(SUBREDDITS)
+if __name__ == "__main__":
+    init_db()
+    scan_users(USER_WATCHLIST, SUBREDDITS)
+    watch_subreddits(SUBREDDITS)

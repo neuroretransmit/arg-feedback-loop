@@ -25,6 +25,7 @@ class Submissions(Base):
     """ 'submissions' table - also known as posts """
     __tablename__ = 'submissions'
     id = Column(String(6), primary_key=True, unique=True)
+    added_by = Column(String(30), nullable=False)
     locked = Column(Boolean(), default=False)
     num_comments = Column(Integer(), default=0)
     permalink = Column(String(200))
@@ -34,6 +35,7 @@ class Submissions(Base):
     selftext = Column(Text(), nullable=True)
     created_on = Column(DateTime(), default=datetime.now)
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
+    url = Column(String(2048), nullable=True)
     idx_permalink = Index('permalink')
     idx_title = Index('title')
 
@@ -45,16 +47,24 @@ class SubredditSubmissions(Base):
     subreddit = Column(ForeignKey("subreddits.id"), primary_key=True)
 
 
-def initialize_db():
+class User(Base):
+    """ 'users' table """
+    __tablename__ = 'usernames'
+    id = Column(String(30), primary_key=True)
+
+
+def add_user(id):
     """
-    Connect to DB and create/modify schema
+    Add subreddit to 'subreddits' table
+    :param name: subreddit name - i.e. the name after https://reddit.com/r/
     :return:
     """
-    # Connect via psycopg2
-    engine.connect()
-    print("Connected to DB:", engine)
-    # Create initial schema
-    metadata.create_all(engine)
+    with Session(engine) as session:
+        exists = session.query(User.id).filter_by(id=id).first() is not None
+        if not exists:
+            stmt = insert(User).values(id=id)
+            with engine.connect() as conn:
+                conn.execute(stmt)
 
 
 def add_subreddit(name):
@@ -64,17 +74,18 @@ def add_subreddit(name):
     :return:
     """
     with Session(engine) as session:
-        exists = session.query(Subreddits).filter_by(id=name).first() is not None
+        exists = session.query(Subreddits.id).filter_by(id=name).first() is not None
         if not exists:
             stmt = insert(Subreddits).values(id=name)
             with engine.connect() as conn:
                 conn.execute(stmt)
 
 
-def add_submission(id, locked, num_comments, permalink, upvotes, upvote_ratio, title, selftext, url):
+def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvote_ratio, title, selftext, url):
     """
     Add submission to 'submissions' table
     :param id: post id
+    :param added_by: either 'watch' or a username
     :param locked: was post locked?
     :param num_comments: number of post comments
     :param permalink: link to post - the portion after https://reddit.com
@@ -86,10 +97,18 @@ def add_submission(id, locked, num_comments, permalink, upvotes, upvote_ratio, t
     :return: none
     """
     with Session(engine) as session:
-        exists = session.query(Submissions).filter_by(id=id).first() is not None
+        exists = session.query(Submissions.id).filter_by(id=id).first() is not None
         if not exists:
-            stmt = insert(Submissions).values(id=id, locked=locked, num_comments=num_comments, permalink=permalink,
+            stmt = insert(Submissions).values(id=id, added_by=added_by, locked=locked, num_comments=num_comments, permalink=permalink,
                                               upvotes=upvotes, upvote_ratio=upvote_ratio, title=title,
                                               selftext=selftext, url=url)
             with engine.connect() as conn:
                 conn.execute(stmt)
+
+
+def init_db():
+    # Connect via psycopg2
+    engine.connect()
+    print("Connected to DB:", engine)
+    # Create initial schema
+    Base.metadata.create_all(engine)

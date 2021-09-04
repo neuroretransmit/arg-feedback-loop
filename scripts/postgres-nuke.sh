@@ -7,5 +7,5 @@ alias dockernuke='dockerkillall; dockercontainerrmall; dockerimagermall'
 dockernuke
 # Remove all volumes
 docker-compose down -v
-docker exec -it postgres /bin/bash -c "printf 'DROP DATABASE arg-watch; CREATE DATABASE arg-watch; ' |  psql postgres -U root"
+#docker exec -it postgres /bin/bash -c "printf 'DROP DATABASE \'argwatch\'; CREATE DATABASE \'argwatch\'; ' |  psql postgres -U root"
 
