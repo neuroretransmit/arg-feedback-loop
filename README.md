@@ -18,10 +18,14 @@ $ source venv/bin/activate
 
 `pip install -r requirements.txt`
 
-## Starting Database
+## DB
+
+![](doc/erd.png)
+
+### Starting Database
 
 Default creds: `root:root`
-Default table: `arg-watch`
+Default database: `argwatch`
 
 `docker-compose up -d db`
 

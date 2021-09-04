@@ -5,15 +5,15 @@ from sqlalchemy import create_engine, insert, \
     MetaData, String, Column, Text, DateTime, Boolean, Integer, Float, \
     ForeignKey, Index
 from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy_schemadisplay import create_schema_graph
+
 
 config = configparser.RawConfigParser()
 config.read('conf/db.conf')
 db = dict(config.items('db'))
 engine = create_engine(f"postgresql+psycopg2://{db['user']}:{db['pass']}@{db['host']}/{db['db']}",
                        echo=True)  # Show SQL being run by ORM
-metadata = MetaData()
 Base = declarative_base()
-
 
 class Subreddits(Base):
     """ 'subreddits' table """
@@ -31,7 +31,7 @@ class Submissions(Base):
     permalink = Column(String(200))
     upvotes = Column(Integer(), default=0)
     upvote_ratio = Column(Float())
-    title = Column(String(200), nullable=False)
+    title = Column(String(512), nullable=False)
     selftext = Column(Text(), nullable=True)
     created_on = Column(DateTime(), default=datetime.now)
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
@@ -112,3 +112,6 @@ def init_db():
     print("Connected to DB:", engine)
     # Create initial schema
     Base.metadata.create_all(engine)
+    print("Generating ERD...")
+    graph = create_schema_graph(metadata=Base.metadata)
+    graph.write_png('doc/erd.png')
