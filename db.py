@@ -12,7 +12,11 @@ config = configparser.RawConfigParser()
 config.read('conf/db.conf')
 db = dict(config.items('db'))
 engine = create_engine(f"postgresql+psycopg2://{db['user']}:{db['pass']}@{db['host']}/{db['db']}",
-                       echo=True)  # Show SQL being run by ORM
+                       echo=True,connect_args={
+                           "keepalives":1,
+                           "keepalives_idle":30,
+                           "keepalives_interval":10,
+                           "keepalives_count":5})  # Show SQL being run by ORM
 Base = declarative_base()
 
 class Subreddits(Base):
