@@ -1,8 +1,6 @@
-from pprint import pprint
-
 from prawcore.exceptions import ResponseException
 
-from db import add_subreddit
+from db import add_subreddit, add_user, add_submission
 from reddithelper import reddit
 
 
@@ -38,8 +36,10 @@ def watch_subreddits(subreddits):
                         filter_submission(submission)
                     except Skip:
                         continue
-                    print(submission.title)
-                    print(submission.url)
+                    print("- found", submission.id)
+                    add_submission(submission.id, 'watch', submission.locked, submission.num_comments, submission.permalink,
+                                   submission.score, submission.upvote_ratio, submission.title, submission.selftext,
+                                   submission.url)
     except ResponseException as e:
         print(e)
 
@@ -52,13 +52,17 @@ def scan_users(users, subreddits):
     :param subreddits: whitelist of valid subreddits
     :return:
     """
+
+    for u in users:
+        add_user(u)
+
     try:
         posts = set()
         # Watch user interactions and add posts to set
         for u in users:
             print(f"Working on user {u}")
             user = reddit.redditor(u)
-            for comment in user.comments.new(limit=25):
+            for comment in user.comments.new(limit=200):
                 # If comment not in watched subreddit, skip
                 if comment.subreddit not in subreddits:
                     continue
@@ -67,11 +71,10 @@ def scan_users(users, subreddits):
                     filter_submission(submission)
                 except Skip:
                     continue
-                if submission.permalink not in posts:
-                    print("- found", submission.id)
-                    posts.add(submission.permalink)
+                print("- found", submission.id)
+                add_submission(submission.id, u, submission.locked, submission.num_comments, submission.permalink,
+                               submission.score, submission.upvote_ratio, submission.title, submission.selftext,
+                               submission.url)
                 # TODO: Else, bump ranking if from another user/high traffic from watched users
-        print("Found posts from user comments:")
-        pprint(posts)
     except ResponseException as e:
         print(e)
