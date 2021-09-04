@@ -1,17 +1,26 @@
+import re
+
 from prawcore.exceptions import ResponseException
 
 from db import add_subreddit, add_user, add_submission
 from reddithelper import reddit
 
 
-class Skip(Exception): pass
+class Skip(Exception):
+    pass
 
 
 # TODO: Expand filtering
 def filter_submission(submission, ignored_flair=["Meme", "Creator Question", "Creator Recruitment", "Question"]):
     # Skip dumb flair/polls, even the ones we aren't are fucking dumb.
+    bs_rx = re.compile(r'([Tt]ik[ -]?[Tt]ok)|([Ii]nstagram)|([Tt]witter)|([Dd]iscord)')
+    removed_rx = re.compile(r'(\[deleted\])|(\[removed\])')
     if hasattr(submission, 'poll_data') \
-            or submission.link_flair_text in ignored_flair:
+            or submission.link_flair_text in ignored_flair \
+            or bs_rx.search(submission.url) \
+            or bs_rx.search(submission.title) \
+            or bs_rx.search(submission.selftext)\
+            or removed_rx.search(submission.selftext):
         raise Skip()
 
 
@@ -37,7 +46,8 @@ def watch_subreddits(subreddits):
                     except Skip:
                         continue
                     print("- found", submission.id)
-                    add_submission(submission.id, 'watch', submission.locked, submission.num_comments, submission.permalink,
+                    add_submission(submission.id, 'watch', submission.locked, submission.num_comments,
+                                   submission.permalink,
                                    submission.score, submission.upvote_ratio, submission.title, submission.selftext,
                                    submission.url)
     except ResponseException as e:
@@ -57,12 +67,10 @@ def scan_users(users, subreddits):
         add_user(u)
 
     try:
-        posts = set()
         # Watch user interactions and add posts to set
         for u in users:
             print(f"Working on user {u}")
-            user = reddit.redditor(u)
-            for comment in user.comments.new(limit=200):
+            for comment in reddit.redditor(u).stream.comments():
                 # If comment not in watched subreddit, skip
                 if comment.subreddit not in subreddits:
                     continue

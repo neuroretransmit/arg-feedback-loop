@@ -1,12 +1,10 @@
 import configparser
-from datetime import datetime
 
-from sqlalchemy import create_engine, insert, \
-    MetaData, String, Column, Text, DateTime, Boolean, Integer, Float, \
-    ForeignKey, Index
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy import create_engine, insert
+from sqlalchemy.orm import Session
 from sqlalchemy_schemadisplay import create_schema_graph
 
+from models import User, Submissions, Subreddits, Archives, Base
 
 config = configparser.RawConfigParser()
 config.read('conf/db.conf')
@@ -17,44 +15,6 @@ engine = create_engine(f"postgresql+psycopg2://{db['user']}:{db['pass']}@{db['ho
                            "keepalives_idle":30,
                            "keepalives_interval":10,
                            "keepalives_count":5})  # Show SQL being run by ORM
-Base = declarative_base()
-
-class Subreddits(Base):
-    """ 'subreddits' table """
-    __tablename__ = 'subreddits'
-    id = Column(String(30), primary_key=True)
-
-
-class Submissions(Base):
-    """ 'submissions' table - also known as posts """
-    __tablename__ = 'submissions'
-    id = Column(String(6), primary_key=True, unique=True)
-    added_by = Column(String(30), nullable=False)
-    locked = Column(Boolean(), default=False)
-    num_comments = Column(Integer(), default=0)
-    permalink = Column(String(200))
-    upvotes = Column(Integer(), default=0)
-    upvote_ratio = Column(Float())
-    title = Column(String(512), nullable=False)
-    selftext = Column(Text(), nullable=True)
-    created_on = Column(DateTime(), default=datetime.now)
-    updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
-    url = Column(String(2048), nullable=True)
-    idx_permalink = Index('permalink')
-    idx_title = Index('title')
-
-
-class SubredditSubmissions(Base):
-    """ Many-to-many relationship between subreddits and submissions """
-    __tablename__ = 'subreddit_submissions'
-    id = Column(ForeignKey("submissions.id"), primary_key=True)
-    subreddit = Column(ForeignKey("subreddits.id"), primary_key=True)
-
-
-class User(Base):
-    """ 'users' table """
-    __tablename__ = 'usernames'
-    id = Column(String(30), primary_key=True)
 
 
 def add_user(id):
@@ -85,6 +45,31 @@ def add_subreddit(name):
                 conn.execute(stmt)
 
 
+def add_archive(id, locked, num_comments, permalink, upvotes, upvote_ratio, title, selftext, url):
+    """
+    Add submission to 'submissions' table
+    :param id: post id
+    :param locked: was post locked?
+    :param num_comments: number of post comments
+    :param permalink: link to post - the portion after https://reddit.com
+    :param upvotes: number of upvotes
+    :param upvote_ratio: ratio of upvotes to total votes
+    :param title: post title
+    :param selftext: post contents
+    :param url: the url the post links to
+    :return: none
+    """
+    with Session(engine) as session:
+        exists = session.query(Archives.id).filter_by(id=id).first() is not None
+        if not exists:
+            stmt = insert(Archives).values(id=id, added_by='archival', locked=locked, num_comments=num_comments,
+                                           permalink=permalink,
+                                           upvotes=upvotes, upvote_ratio=upvote_ratio, title=title,
+                                           selftext=selftext, url=url)
+            with engine.connect() as conn:
+                conn.execute(stmt)
+
+
 def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvote_ratio, title, selftext, url):
     """
     Add submission to 'submissions' table
@@ -103,7 +88,8 @@ def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvot
     with Session(engine) as session:
         exists = session.query(Submissions.id).filter_by(id=id).first() is not None
         if not exists:
-            stmt = insert(Submissions).values(id=id, added_by=added_by, locked=locked, num_comments=num_comments, permalink=permalink,
+            stmt = insert(Submissions).values(id=id, added_by=added_by, locked=locked, num_comments=num_comments,
+                                              permalink=permalink,
                                               upvotes=upvotes, upvote_ratio=upvote_ratio, title=title,
                                               selftext=selftext, url=url)
             with engine.connect() as conn:
