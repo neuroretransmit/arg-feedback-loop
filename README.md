@@ -39,4 +39,8 @@ Default database: `argwatch`
 	- launch a PSQL instance on the arg-watch database for quick querying
 * [scripts/postgres-nuke.sh](scripts/postgres-nuke.sh)
 	- In the event of database getting massively fucked, tear down docker container/images/volumes and DROP/recreate
+* [scripts/postgres-backup.sh](scripts/postgres-backup.sh)
+	- Backup the current data
+* [scripts/postgres-restore.sh](scripts/postgres-restore.sh)
+	- Restore data from the dump in `data/`
 * [scripts/start-db.sh](scripts/start-db.sh)
