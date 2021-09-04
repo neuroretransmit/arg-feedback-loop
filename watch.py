@@ -70,7 +70,7 @@ def scan_users(users, subreddits):
         # Watch user interactions and add posts to set
         for u in users:
             print(f"Working on user {u}")
-            for comment in reddit.redditor(u).stream.comments():
+            for comment in reddit.redditor(u).comments.new(limit=200):
                 # If comment not in watched subreddit, skip
                 if comment.subreddit not in subreddits:
                     continue
