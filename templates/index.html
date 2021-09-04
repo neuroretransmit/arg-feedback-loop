@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang = "en">
+	<head></head>
+	<body>
+		<h1>ARG Watch</h1>
+	<ul>
+		{% for submission in submissions %}
+			<li>
+				<a href="https://reddit.com{{submission.permalink}}">{{submission.title}}</a>
+				<br>
+				{% if is_image(submission.url) %}
+					<img src="{{submission.url}}" height="60px"/>
+				{% elif submission.selftext != '' %}
+				    {% filter markdown %}
+					{{submission.selftext}}
+					{% endfilter %}
+				{% endif %}
+			</li>
+		{% endfor %}
+	</ul>
+	</body>
+</html>

@@ -124,3 +124,11 @@ def get_last_scanned(id):
     with Session(engine) as session:
         last_scanned_on = session.query(User.last_scanned_on).filter_by(id=id).first()
         return last_scanned_on[0]
+
+
+def get_submissions():
+    submissions = []
+    with Session(engine) as session:
+        for submission in session.query(Submissions):
+            submissions.append(submission)
+    return submissions
