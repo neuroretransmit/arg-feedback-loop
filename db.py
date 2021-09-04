@@ -10,11 +10,22 @@ config = configparser.RawConfigParser()
 config.read('conf/db.conf')
 db = dict(config.items('db'))
 engine = create_engine(f"postgresql+psycopg2://{db['user']}:{db['pass']}@{db['host']}/{db['db']}",
-                       echo=True,connect_args={
-                           "keepalives":1,
-                           "keepalives_idle":30,
-                           "keepalives_interval":10,
-                           "keepalives_count":5})  # Show SQL being run by ORM
+                       echo=True, connect_args={
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5})  # Show SQL being run by ORM
+
+
+def init_db():
+    # Connect via psycopg2
+    engine.connect()
+    print("Connected to DB:", engine)
+    # Create initial schema
+    Base.metadata.create_all(engine)
+    print("Generating ERD...")
+    graph = create_schema_graph(metadata=Base.metadata)
+    graph.write_png('doc/erd.png')
 
 
 def add_user(id):
@@ -96,12 +107,20 @@ def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvot
                 conn.execute(stmt)
 
 
-def init_db():
-    # Connect via psycopg2
-    engine.connect()
-    print("Connected to DB:", engine)
-    # Create initial schema
-    Base.metadata.create_all(engine)
-    print("Generating ERD...")
-    graph = create_schema_graph(metadata=Base.metadata)
-    graph.write_png('doc/erd.png')
+def get_latest_archival():
+    with Session(engine) as session:
+        created = session.query(Archives.created_on).order_by(Archives.created_on.desc()).first()
+        return created[0]
+
+
+def update_last_scanned(id, when):
+    with Session(engine) as session:
+        user = session.query(User).filter_by(id=id).first()
+        user.last_scanned_on = when
+        session.commit()
+
+
+def get_last_scanned(id):
+    with Session(engine) as session:
+        last_scanned_on = session.query(User.last_scanned_on).filter_by(id=id).first()
+        return last_scanned_on[0]

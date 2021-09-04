@@ -2,10 +2,11 @@
 
 # FIXME: Slow ass network via client auth
 
+from datetime import timedelta, datetime
+
 from prawcore.exceptions import ResponseException
 
-from db import add_archive
-from db import init_db
+from db import init_db, get_latest_archival, add_archive
 from reddithelper import reddit
 from watch import filter_submission, Skip
 from watch import watch_subreddits, scan_users
@@ -13,8 +14,8 @@ from watch import watch_subreddits, scan_users
 SUBREDDITS = ['ARG', 'puzzles', 'codes']
 USER_WATCHLIST = ['indires', 'StudentConfident9045', 'PotatoKingTheVII', 'PTR47']
 
-if __name__ == "__main__":
-    init_db()
+
+def archive():
     time_range = 'all'
     limit = 100
     try:
@@ -33,5 +34,12 @@ if __name__ == "__main__":
     except ResponseException as e:
         print(e)
 
+
+if __name__ == "__main__":
+    init_db()
+    yesterday = datetime.today() - timedelta(days=1)
+    if get_latest_archival() < yesterday:
+        archive()
+    # TODO: Limit scans of users
     scan_users(USER_WATCHLIST, SUBREDDITS)
     watch_subreddits(SUBREDDITS)

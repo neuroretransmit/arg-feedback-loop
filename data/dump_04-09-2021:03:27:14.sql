@@ -489,10 +489,10 @@ codes
 --
 
 COPY public.usernames (id, last_scanned_on) FROM stdin;
-indires	2021-09-04 00:56:52.920235
-StudentConfident9045	2021-09-04 00:56:52.927488
-PotatoKingTheVII	2021-09-04 00:56:52.934719
-PTR47	2021-09-04 00:56:52.941678
+indires	2021-09-04 03:26:51.935076
+StudentConfident9045	2021-09-04 03:26:51.943414
+PotatoKingTheVII	2021-09-04 03:26:51.949583
+PTR47	2021-09-04 03:26:51.955411
 \.
 
 

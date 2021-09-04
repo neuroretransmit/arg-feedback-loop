@@ -1,8 +1,9 @@
 import re
+from datetime import datetime, timedelta
 
 from prawcore.exceptions import ResponseException
 
-from db import add_subreddit, add_user, add_submission
+from db import add_subreddit, add_user, add_submission, update_last_scanned, get_last_scanned
 from reddithelper import reddit
 
 
@@ -19,7 +20,7 @@ def filter_submission(submission, ignored_flair=["Meme", "Creator Question", "Cr
             or submission.link_flair_text in ignored_flair \
             or bs_rx.search(submission.url) \
             or bs_rx.search(submission.title) \
-            or bs_rx.search(submission.selftext)\
+            or bs_rx.search(submission.selftext) \
             or removed_rx.search(submission.selftext):
         raise Skip()
 
@@ -37,7 +38,7 @@ def watch_subreddits(subreddits):
         print(f"Watching {subreddits} for new posts")
         while True:
             for subreddit in subreddits:
-                for submission in reddit.subreddit(subreddit).stream.submissions(skip_existing=True, pause_after=-1):
+                for submission in reddit().subreddit(subreddit).stream.submissions(skip_existing=True, pause_after=-1):
                     # Skip empty streams
                     if submission is None:
                         continue
@@ -69,20 +70,23 @@ def scan_users(users, subreddits):
     try:
         # Watch user interactions and add posts to set
         for u in users:
-            print(f"Working on user {u}")
-            for comment in reddit.redditor(u).comments.new(limit=200):
-                # If comment not in watched subreddit, skip
-                if comment.subreddit not in subreddits:
-                    continue
-                submission = comment.submission
-                try:
-                    filter_submission(submission)
-                except Skip:
-                    continue
-                print("- found", submission.id)
-                add_submission(submission.id, u, submission.locked, submission.num_comments, submission.permalink,
-                               submission.score, submission.upvote_ratio, submission.title, submission.selftext,
-                               submission.url)
-                # TODO: Else, bump ranking if from another user/high traffic from watched users
+            half_hour_ago = datetime.now() - timedelta(minutes=30)
+            if get_last_scanned(u) < half_hour_ago:
+                print(f"Working on user {u}")
+                for comment in reddit().redditor(u).comments.new(limit=100):
+                    # If comment not in watched subreddit, skip
+                    if comment.subreddit not in subreddits:
+                        continue
+                    submission = comment.submission
+                    try:
+                        filter_submission(submission)
+                    except Skip:
+                        continue
+                    print("- found", submission.id)
+                    add_submission(submission.id, u, submission.locked, submission.num_comments, submission.permalink,
+                                   submission.score, submission.upvote_ratio, submission.title, submission.selftext,
+                                   submission.url)
+                    # TODO: Else, bump ranking if from another user/high traffic from watched users
+            update_last_scanned(u, datetime.now())
     except ResponseException as e:
         print(e)

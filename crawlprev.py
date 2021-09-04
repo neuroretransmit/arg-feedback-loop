@@ -1,4 +1,3 @@
-import praw
 from reddithelper import reddit
 
 """
@@ -10,7 +9,7 @@ time_range = 'all'
 limit = 100
 ignored_flair = ["Meme", "Creator Question", "Creator Recruitment", "Question"]
 
-selection = reddit.subreddit(subreddit_name).top(time_range,limit=limit)
+selection = reddit.subreddit(subreddit_name).top(time_range, limit=limit)
 print(f"{subreddit_name}: top {limit} posts over {time_range}")
 for submission in selection:
     if submission.link_flair_text not in ignored_flair:
@@ -20,4 +19,3 @@ for submission in selection:
 
 # for local backup 
 # with open(f'{subreddit_name}_top_{time_range}_{limit}.txt','w') as wfile:
-
