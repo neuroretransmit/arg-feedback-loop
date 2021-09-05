@@ -135,6 +135,13 @@ def update_last_scanned(id, when):
         session.commit()
 
 
+def update_classification(id, classification):
+    with Session(engine) as session:
+        submission = session.query(Submissions).filter_by(id=id).first()
+        submission.classification = classification
+        session.commit()
+
+
 def get_last_scanned(id):
     with Session(engine) as session:
         last_scanned_on = session.query(User.last_scanned_on).filter_by(id=id).first()
