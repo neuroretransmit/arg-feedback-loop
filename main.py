@@ -19,7 +19,7 @@ def archive():
     time_range = 'all'
     limit = 100
     try:
-        selection = reddit.subreddit('ARG').top(time_range, limit=limit)
+        selection = reddit().subreddit('ARG').top(time_range, limit=limit)
         print(f"ARG: top {limit} posts over {time_range}")
         for submission in selection:
             try:
@@ -38,7 +38,8 @@ def archive():
 if __name__ == "__main__":
     init_db()
     yesterday = datetime.today() - timedelta(days=1)
-    if get_latest_archival() < yesterday:
+    last_archival = get_latest_archival()
+    if last_archival is None or last_archival < yesterday:
         archive()
     # TODO: Limit scans of users
     scan_users(USER_WATCHLIST, SUBREDDITS)

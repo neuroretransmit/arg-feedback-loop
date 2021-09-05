@@ -30,6 +30,10 @@ class Submissions(Base):
     created_on = Column(DateTime(), default=datetime.now)
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
     url = Column(String(2048), nullable=True)
+    # so we don't have to decide when template is rendering
+    is_img = Column(Boolean(), default=False)
+    # spam/ham
+    classification = Column(String(4), default="")
     idx_submissions_permalink = Index('permalink')
     idx_submissions_title = Index('title')
 
@@ -49,6 +53,10 @@ class Archives(Base):
     selftext = Column(Text(), nullable=True)
     created_on = Column(DateTime(), default=datetime.now)
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
+    # so we don't have to decide when template is rendering
+    is_img = Column(Boolean(), default=False)
+    # spam/ham
+    classification = Column(String(4), default="")
     url = Column(String(2048), nullable=True)
     idx_archives_permalink = Index('permalink')
     idx_archives_title = Index('title')
@@ -65,4 +73,4 @@ class User(Base):
     """ 'users' table """
     __tablename__ = 'usernames'
     id = Column(String(30), primary_key=True)
-    last_scanned_on = Column(DateTime(), default=datetime.now)
+    last_scanned_on = Column(DateTime())

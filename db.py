@@ -1,5 +1,7 @@
 import configparser
 
+import requests
+from requests.exceptions import MissingSchema
 from sqlalchemy import create_engine, insert
 from sqlalchemy.orm import Session
 from sqlalchemy_schemadisplay import create_schema_graph
@@ -56,6 +58,19 @@ def add_subreddit(name):
                 conn.execute(stmt)
 
 
+def is_image(image_url):
+    image_formats = ("image/png", "image/jpeg", "image/jpg")
+    try:
+        r = requests.head(image_url, verify=False)
+        if r.headers["content-type"] in image_formats:
+            return True
+    except MissingSchema:
+        return False
+    except KeyError:
+        return False
+    return False
+
+
 def add_archive(id, locked, num_comments, permalink, upvotes, upvote_ratio, title, selftext, url):
     """
     Add submission to 'submissions' table
@@ -76,7 +91,7 @@ def add_archive(id, locked, num_comments, permalink, upvotes, upvote_ratio, titl
             stmt = insert(Archives).values(id=id, added_by='archival', locked=locked, num_comments=num_comments,
                                            permalink=permalink,
                                            upvotes=upvotes, upvote_ratio=upvote_ratio, title=title,
-                                           selftext=selftext, url=url)
+                                           selftext=selftext, url=url, is_img=is_image(url))
             with engine.connect() as conn:
                 conn.execute(stmt)
 
@@ -102,7 +117,7 @@ def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvot
             stmt = insert(Submissions).values(id=id, added_by=added_by, locked=locked, num_comments=num_comments,
                                               permalink=permalink,
                                               upvotes=upvotes, upvote_ratio=upvote_ratio, title=title,
-                                              selftext=selftext, url=url)
+                                              selftext=selftext, url=url, is_img=is_image(url))
             with engine.connect() as conn:
                 conn.execute(stmt)
 
@@ -110,7 +125,7 @@ def add_submission(id, added_by, locked, num_comments, permalink, upvotes, upvot
 def get_latest_archival():
     with Session(engine) as session:
         created = session.query(Archives.created_on).order_by(Archives.created_on.desc()).first()
-        return created[0]
+        return None if created is None or len(created) == 0 else created[0]
 
 
 def update_last_scanned(id, when):
@@ -123,7 +138,7 @@ def update_last_scanned(id, when):
 def get_last_scanned(id):
     with Session(engine) as session:
         last_scanned_on = session.query(User.last_scanned_on).filter_by(id=id).first()
-        return last_scanned_on[0]
+        return None if last_scanned_on is None or len(last_scanned_on) == 0 else last_scanned_on[0]
 
 
 def get_submissions():

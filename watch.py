@@ -71,7 +71,8 @@ def scan_users(users, subreddits):
         # Watch user interactions and add posts to set
         for u in users:
             half_hour_ago = datetime.now() - timedelta(minutes=30)
-            if get_last_scanned(u) < half_hour_ago:
+            last_scanned_on = get_last_scanned(u)
+            if last_scanned_on is None or last_scanned_on < half_hour_ago:
                 print(f"Working on user {u}")
                 for comment in reddit().redditor(u).comments.new(limit=100):
                     # If comment not in watched subreddit, skip
