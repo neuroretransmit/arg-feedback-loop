@@ -28,9 +28,10 @@
 				{% if submission.is_img %}
 					<img src="{{submission.url}}" height="200px"/>
 				{% elif submission.selftext != '' %}
-
 					{{submission.selftext|markdown}}
-
+				{% endif %}
+				{% if submission.classification != '' %}
+					{{submission.classification}}
 				{% endif %}
 				<button type="button" onclick="classify('{{submission.id}}', 'spam')">Spam</button>
 				<button type="button" onclick="classify('{{submission.id}}', 'ham')">Ham</button>
