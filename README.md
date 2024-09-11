@@ -1,5 +1,9 @@
 # arg-feedback-loop
 
+This was a project I started to do baysian classification for **quality** puzzles floating by in plain sight within the r/ARG subreddit and
+watch particular users of interest who know how to find them. I social engineered my way to admin of the sub and wanted to flush all the 
+garbage analog horror out of it and bring back real puzzles.
+
 ## Setup
 
 ### Creating the Virtual Environment
